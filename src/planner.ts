@@ -4,7 +4,7 @@
 import { buildCarsAndRiders } from './domain/cost';
 import type { Car, PlanError, PlanInput, PlanResult } from './domain/types';
 import { buildProblem, problemPoints, toSolverInput } from './domain/validate';
-import { getDistanceMatrix, getRouteGeometry } from './services/routing';
+import { getMatrices, getRouteGeometry, type Matrices } from './services/routing';
 import type { SolverInput, SolverOutput } from './solver/types';
 import { db, newId } from './storage/db';
 
@@ -12,7 +12,7 @@ export type Progress = 'check' | 'distance' | 'solve' | 'route' | 'save';
 
 export const PROGRESS_LABEL: Record<Progress, string> = {
   check: '入力を確認しています…',
-  distance: '道路距離を取得しています…',
+  distance: '道路距離と所要時間を取得しています…',
   solve: '配車を最適化しています…',
   route: '地図に描く経路を取得しています…',
   save: '結果を保存しています…',
@@ -56,23 +56,29 @@ export async function createPlan(
 
   onProgress('distance');
   const points = problemPoints(problem);
-  let dist: number[][];
+  let matrices: Matrices;
   try {
-    dist = await getDistanceMatrix(points);
+    matrices = await getMatrices(points);
   } catch {
     return { ok: false, error: routingError() };
   }
 
   onProgress('solve');
-  const solverInput = toSolverInput(problem, dist);
+  const solverInput = toSolverInput(problem, matrices.distance);
   const out = await solveInWorker(solverInput);
   if (!out.feasible) {
     return { ok: false, error: { code: 'E04', message: '定員内で全員を割り当てられる組み合わせがありません' } };
   }
 
   onProgress('route');
-  const settings = { unitPriceYenPerKm: input.unitPriceYenPerKm };
-  const { cars: carsNoGeometry, riders } = buildCarsAndRiders(problem, solverInput.dist, out.cars, settings);
+  const { cars: carsNoGeometry, riders } = buildCarsAndRiders(
+    problem,
+    solverInput.dist,
+    matrices.duration,
+    out.cars,
+    { unitPriceYenPerKm: input.unitPriceYenPerKm },
+    input,
+  );
   const cars: Car[] = [];
   try {
     for (const sc of out.cars) {
@@ -96,6 +102,7 @@ export async function createPlan(
       players: players.filter((p) => input.attendance[p.id] && participatingIds.has(p.householdId)),
     },
     distanceMatrix: solverInput.dist,
+    durationMatrix: matrices.duration,
     cars,
     riders,
     totalDistanceM: out.totalDistanceM,

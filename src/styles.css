@@ -68,6 +68,7 @@ label.field {
 
 input[type='text'],
 input[type='date'],
+input[type='time'],
 input[type='number'],
 select {
   font: inherit;
@@ -314,6 +315,37 @@ td.wrap {
 .pin.venue {
   border-radius: 6px;
   background: #222;
+}
+
+.car {
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+.car-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 4px;
+}
+
+ol.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ol.timeline li {
+  display: flex;
+  gap: 8px;
+}
+
+ol.timeline time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 3em;
+  text-align: right;
 }
 
 pre.share {

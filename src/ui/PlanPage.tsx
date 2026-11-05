@@ -7,24 +7,38 @@ import type { PlanError, PlanInput } from '../domain/types';
 import { maxCarriable, summarizeInput } from '../domain/validate';
 import { createPlan, PROGRESS_LABEL, type Progress } from '../planner';
 import { byLabel, todayIso } from './format';
+import { formatTime, parseTime } from '../domain/schedule';
+
+const arrivalLabel = (assemblyTime: string, bufferMin: number) => {
+  try {
+    return formatTime(parseTime(assemblyTime) - bufferMin);
+  } catch {
+    return '—';
+  }
+};
 
 const DEFAULT_CAPACITY = 3;
 
-type Draft = Omit<PlanInput, 'id' | 'createdAt' | 'unitPriceYenPerKm'>;
+const DEFAULT_ASSEMBLY_TIME = '09:00';
+
+// 単価・乗車時間・補正係数は「計画を作成」を押した時点の設定値を使う
+type Draft = Omit<PlanInput, 'id' | 'createdAt' | 'unitPriceYenPerKm' | 'dwellMin' | 'durationFactor'>;
 
 export default function PlanPage({ onCreated, onGoMaster }: { onCreated: (resultId: string) => void; onGoMaster: () => void }) {
   const households = useLiveQuery(() => db.households.toArray(), []);
   const players = useLiveQuery(() => db.players.toArray(), []);
   const venues = useLiveQuery(() => db.venues.toArray(), []);
-  const lastInput = useLiveQuery(() => db.planInputs.orderBy('createdAt').last(), []);
+  // 読み込み中は undefined、前回の入力がなければ null
+  const lastInput = useLiveQuery(async () => (await db.planInputs.orderBy('createdAt').last()) ?? null, []);
+  const settings = useLiveQuery(() => getSettings(), []);
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState<PlanError | null>(null);
 
-  // 初期値：全員参加、最初の会場とその駐車可能台数
+  // 初期値：全員参加、最初の会場とその駐車可能台数、前回の集合時間、設定画面の余裕時間
   useEffect(() => {
-    if (draft || !players || !venues) return;
+    if (draft || !players || !venues || !settings || lastInput === undefined) return;
     const venue = venues[0];
     setDraft({
       matchDate: todayIso(),
@@ -32,8 +46,10 @@ export default function PlanPage({ onCreated, onGoMaster }: { onCreated: (result
       parking: venue?.defaultParking ?? 1,
       attendance: Object.fromEntries(players.filter((p) => p.active).map((p) => [p.id, true])),
       drivers: {},
+      assemblyTime: lastInput?.assemblyTime ?? DEFAULT_ASSEMBLY_TIME,
+      bufferMin: settings.bufferMin,
     });
-  }, [draft, players, venues]);
+  }, [draft, players, venues, settings, lastInput]);
 
   const activePlayers = useMemo(() => (players ?? []).filter((p) => p.active), [players]);
   const groups = useMemo(
@@ -88,19 +104,23 @@ export default function PlanPage({ onCreated, onGoMaster }: { onCreated: (result
       parking: lastInput.parking,
       attendance: { ...lastInput.attendance },
       drivers: { ...lastInput.drivers },
+      assemblyTime: lastInput.assemblyTime ?? draft.assemblyTime,
+      bufferMin: lastInput.bufferMin ?? draft.bufferMin,
     });
   };
 
   const run = async () => {
     setError(null);
-    const settings = await getSettings();
+    const current = await getSettings();
     // 子が参加しない世帯の車出しは保存しない（D10）
     const drivers = Object.fromEntries(Object.entries(draft.drivers).filter(([hid]) => summary.kidsByHousehold.has(hid)));
     const input: PlanInput = {
       ...draft,
       drivers,
       id: newId(),
-      unitPriceYenPerKm: settings.unitPriceYenPerKm,
+      unitPriceYenPerKm: current.unitPriceYenPerKm,
+      dwellMin: current.dwellMin,
+      durationFactor: current.durationFactor,
       createdAt: new Date().toISOString(),
     };
     try {
@@ -144,6 +164,19 @@ export default function PlanPage({ onCreated, onGoMaster }: { onCreated: (result
             駐車可能台数
             <input type="number" min={0} value={draft.parking} onChange={(e) => update({ parking: Number(e.target.value) })} />
           </label>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <label className="field">
+            集合時間
+            <input type="time" value={draft.assemblyTime} onChange={(e) => update({ assemblyTime: e.target.value })} />
+          </label>
+          <label className="field">
+            余裕時間（分）
+            <input type="number" min={0} value={draft.bufferMin} onChange={(e) => update({ bufferMin: Math.max(0, Number(e.target.value)) })} />
+          </label>
+          <span className="muted grow" style={{ alignSelf: 'flex-end' }}>
+            会場到着の目標：{arrivalLabel(draft.assemblyTime, draft.bufferMin)}
+          </span>
         </div>
         <div className="row" style={{ marginTop: 8 }}>
           <button className="small" onClick={copyLast} disabled={!lastInput}>
@@ -206,7 +239,7 @@ export default function PlanPage({ onCreated, onGoMaster }: { onCreated: (result
           </div>
         )}
         {running && <div className="msg info">{PROGRESS_LABEL[progress]}</div>}
-        <button className="primary big" onClick={run} disabled={running || !draft.venueId}>
+        <button className="primary big" onClick={run} disabled={running || !draft.venueId || !draft.assemblyTime}>
           計画を作成
         </button>
       </div>

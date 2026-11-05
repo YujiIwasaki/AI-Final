@@ -228,11 +228,18 @@
         "sample-h11": 4
       },
       "unitPriceYenPerKm": 17,
-      "createdAt": "2026-11-05T00:00:00.000Z"
+      "createdAt": "2026-11-05T00:00:00.000Z",
+      "assemblyTime": "08:30",
+      "bufferMin": 15,
+      "dwellMin": 5,
+      "durationFactor": 1.3
     }
   ],
   "planResults": [],
   "settings": {
-    "unitPriceYenPerKm": 17
+    "unitPriceYenPerKm": 17,
+    "durationFactor": 1.3,
+    "dwellMin": 5,
+    "bufferMin": 15
   }
 }

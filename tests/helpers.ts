@@ -21,6 +21,13 @@ export function matrixOf(points: LatLng[]): number[][] {
   return points.map((a) => points.map((b) => pseudoRoad(a, b)));
 }
 
+/** 距離から所要時間（秒）をつくる（時速 30 km 相当） */
+export function durationOf(dist: number[][]): number[][] {
+  return dist.map((row) => row.map((d) => Math.round(d / (30_000 / 3600))));
+}
+
+export const SCHEDULE = { assemblyTime: '09:00', bufferMin: 15, dwellMin: 5, durationFactor: 1.3 };
+
 /** ランダムな合成問題（世帯 h 個 + 会場）。drivers 個の世帯が車を出せる */
 export function randomInstance(opts: {
   seed: number;

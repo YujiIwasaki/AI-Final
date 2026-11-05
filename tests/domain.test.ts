@@ -3,7 +3,7 @@ import { buildCarsAndRiders, calcCost } from '../src/domain/cost';
 import { buildProblem, problemPoints, toSolverInput } from '../src/domain/validate';
 import type { Household, PlanInput, Player, Problem, Venue } from '../src/domain/types';
 import { solve } from '../src/solver';
-import { matrixOf } from './helpers';
+import { durationOf, matrixOf, SCHEDULE } from './helpers';
 
 const venue: Venue = { id: 'v', name: '会場', address: '', lat: 35.626, lng: 139.657, defaultParking: 2 };
 
@@ -33,6 +33,7 @@ function makeData() {
     attendance: Object.fromEntries(players.map((p) => [p.id, true])),
     drivers: { a: 3, d: 3, f: 2 },
     unitPriceYenPerKm: 17,
+    ...SCHEDULE,
     createdAt: '',
   };
   return { households, players, input };
@@ -44,7 +45,7 @@ function plan(households: Household[], players: Player[], input: PlanInput, v: V
   const dist = matrixOf(problemPoints(built.problem));
   const out = solve(toSolverInput(built.problem, dist));
   if (!out.feasible) return { error: { code: 'E04' } };
-  return { problem: built.problem, out: { ...out, computeMs: 0 }, ...buildCarsAndRiders(built.problem, dist, out.cars, { unitPriceYenPerKm: input.unitPriceYenPerKm }) };
+  return { problem: built.problem, out: { ...out, computeMs: 0 }, ...buildCarsAndRiders(built.problem, dist, durationOf(dist), out.cars, { unitPriceYenPerKm: input.unitPriceYenPerKm }, input) };
 }
 
 describe('T3 入力の順番を入れ替えても結果が一致する', () => {
@@ -124,7 +125,7 @@ describe('T8 区間距離・負担額が手計算の値と一致する', () => {
       [9999, 9999, 0, 3500],
       [9999, 9999, 9999, 0],
     ];
-    const { cars, riders } = buildCarsAndRiders(problem, dist, [{ driver: 0, stops: [1, 2] }], { unitPriceYenPerKm: 17 });
+    const { cars, riders } = buildCarsAndRiders(problem, dist, durationOf(dist), [{ driver: 0, stops: [1, 2] }], { unitPriceYenPerKm: 17 }, SCHEDULE);
     expect(cars[0]).toMatchObject({ driverHouseholdId: 'x', stops: ['y', 'z'], load: 3, capacity: 3, distanceM: 6500 });
     const byId = Object.fromEntries(riders.map((r) => [r.playerId, r]));
     // 運転手の子：区間 = 車の片道距離、負担 0

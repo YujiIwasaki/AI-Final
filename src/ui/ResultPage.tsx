@@ -6,6 +6,7 @@ import { db } from '../storage/db';
 import type { PlanResult } from '../domain/types';
 import { RouteMap, type RouteMapCar } from './maps';
 import { carColor, dateJa, km, yen } from './format';
+import { formatTime } from '../domain/schedule';
 
 export default function ResultPage({ resultId, onSelect }: { resultId?: string; onSelect: (id: string) => void }) {
   const results = useLiveQuery(() => db.planResults.orderBy('createdAt').reverse().toArray(), []);
@@ -84,7 +85,9 @@ function ResultView({ result }: { result: PlanResult }) {
     return b.sectionDistanceM - a.sectionDistanceM;
   });
 
-  const shareText = buildShareText(result, label, kidsOf);
+  // 時刻の機能を追加する前に作った計画には schedule がない
+  const hasSchedule = result.cars.every((c) => c.schedule);
+  const shareText = buildShareText(result, label, kidsOf, hasSchedule);
   const [copied, setCopied] = useState(false);
 
   return (
@@ -99,7 +102,16 @@ function ResultView({ result }: { result: PlanResult }) {
           <Stat label="使った台数" value={`${result.cars.length} 台`} />
           <Stat label="計算方法" value={result.method === 'exact' ? '厳密解' : '近似解'} />
           <Stat label="計算時間" value={`${(result.computeMs / 1000).toFixed(1)} 秒`} />
+          {hasSchedule && (
+            <Stat label={`会場到着（集合 ${formatTime(parseHm(snap.input.assemblyTime))}）`} value={`${formatTime(result.cars[0].schedule.arriveMin)} 着`} />
+          )}
         </div>
+        {hasSchedule && (
+          <p className="muted" style={{ marginBottom: 0 }}>
+            時刻は目安です。地図サービスの所要時間 × {snap.input.durationFactor} 倍に、子を乗せる家ごとの乗車時間 {snap.input.dwellMin}{' '}
+            分を足し、集合時間の {snap.input.bufferMin} 分前に着くように逆算しています（渋滞は含みません）。
+          </p>
+        )}
       </div>
 
       <div className="card">
@@ -108,35 +120,43 @@ function ResultView({ result }: { result: PlanResult }) {
 
       <div className="card">
         <h2>車ごと</h2>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>車</th>
-                <th>立ち寄り順</th>
-                <th className="num">片道距離</th>
-                <th className="num">乗車 / 定員</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.cars.map((c, i) => (
-                <tr key={c.driverHouseholdId}>
-                  <td>
-                    <span className="swatch" style={{ background: carColor(i) }} />
-                    {i + 1}号車
-                  </td>
-                  <td style={{ whiteSpace: 'normal' }}>
-                    <b>{label(c.driverHouseholdId)}</b>（運転） → {c.stops.map((s) => `${label(s)} → `).join('')}会場
-                  </td>
-                  <td className="num">{km(c.distanceM)}</td>
-                  <td className="num">
-                    {c.load} / {c.capacity}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {result.cars.map((c, i) => (
+          <div className="car" key={c.driverHouseholdId}>
+            <div className="car-head">
+              <span>
+                <span className="swatch" style={{ background: carColor(i) }} />
+                <b>{i + 1}号車</b>
+              </span>
+              <span className="muted">
+                片道 {km(c.distanceM)}・乗車 {c.load} / {c.capacity} 人
+              </span>
+            </div>
+            {c.schedule ? (
+              <ol className="timeline">
+                <li>
+                  <time>{formatTime(c.schedule.departMin)}</time>
+                  <span>
+                    <b>{label(c.driverHouseholdId)}</b> 出発（運転）
+                  </span>
+                </li>
+                {c.stops.map((s, j) => (
+                  <li key={s}>
+                    <time>{formatTime(c.schedule.stopMin[j])}</time>
+                    <span>{label(s)}</span>
+                  </li>
+                ))}
+                <li>
+                  <time>{formatTime(c.schedule.arriveMin)}</time>
+                  <span>会場 着</span>
+                </li>
+              </ol>
+            ) : (
+              <div>
+                <b>{label(c.driverHouseholdId)}</b>（運転） → {c.stops.map((s) => `${label(s)} → `).join('')}会場
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="card">
@@ -164,7 +184,13 @@ function ResultView({ result }: { result: PlanResult }) {
                   <tr key={r.playerId}>
                     <td className="wrap">
                       {p?.name ?? '（削除された選手）'}
-                      {r.isOwnCar && <span className="sub">自分の家の車</span>}
+                      {hasSchedule ? (
+                        <span className="sub">
+                          {formatTime(r.pickupMin)} {r.isOwnCar ? '出発（自分の家の車）' : '迎え'}
+                        </span>
+                      ) : (
+                        r.isOwnCar && <span className="sub">自分の家の車</span>
+                      )}
                     </td>
                     <td>
                       <span className="swatch" style={{ background: carColor(carNo.get(r.driverHouseholdId)!) }} />
@@ -214,13 +240,21 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /** 共有テキストには名前と立ち寄り順だけを載せ、住所は載せない（設計書 6 章） */
-function buildShareText(result: PlanResult, label: (hid: string) => string, kidsOf: (hid: string) => string[]) {
+function buildShareText(result: PlanResult, label: (hid: string) => string, kidsOf: (hid: string) => string[], hasSchedule: boolean) {
   const snap = result.inputSnapshot;
   const lines = [`【配車計画】${dateJa(snap.input.matchDate)} ${snap.venue.name}`];
+  if (hasSchedule) lines.push(`集合 ${formatTime(parseHm(snap.input.assemblyTime))}（時刻は目安です）`);
+  const at = (min: number | undefined) => (hasSchedule && min !== undefined ? `${formatTime(min)} ` : '');
   result.cars.forEach((c, i) => {
     lines.push('', `■ ${i + 1}号車　運転：${label(c.driverHouseholdId)}（${kidsOf(c.driverHouseholdId).join('・')}）`);
-    c.stops.forEach((s, j) => lines.push(`  ${j + 1}. ${label(s)}（${kidsOf(s).join('・')}）`));
-    lines.push('  → 会場');
+    if (hasSchedule) lines.push(`  ${at(c.schedule.departMin)}出発`);
+    c.stops.forEach((s, j) => lines.push(`  ${at(c.schedule?.stopMin[j])}${label(s)}（${kidsOf(s).join('・')}）`));
+    lines.push(`  ${at(c.schedule?.arriveMin)}会場 着`);
   });
   return lines.join('\n');
 }
+
+const parseHm = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};

@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { getSettings, saveSettings } from '../storage/db';
+import { DEFAULT_SETTINGS, type Settings } from '../domain/types';
 import { deleteAll, downloadJson, exportAll, importAll, parseBackup } from '../storage/backup';
 import sample from '../../sample_data/sample.json';
 import { todayIso } from './format';
 
 export default function SettingsPage() {
-  const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [message, setMessage] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    getSettings().then((s) => setUnitPrice(s.unitPriceYenPerKm));
+    getSettings().then(setSettings);
   }, []);
 
   const doImport = async (file: File) => {
@@ -19,7 +20,7 @@ export default function SettingsPage() {
       const data = parseBackup(await file.text());
       if (!confirm('今のデータはすべて置き換えられます。読み込みますか？')) return;
       await importAll(data);
-      setUnitPrice(data.settings?.unitPriceYenPerKm ?? unitPrice);
+      setSettings(await getSettings());
       setMessage({ kind: 'info', text: `読み込みました（世帯 ${data.households.length}・選手 ${data.players.length}・計画 ${data.planResults.length}）` });
     } catch (e) {
       setMessage({ kind: 'error', text: `読み込めませんでした：${(e as Error).message}` });
@@ -29,7 +30,7 @@ export default function SettingsPage() {
   const loadSample = async () => {
     if (!confirm('今のデータはすべてサンプルデータに置き換えられます。よろしいですか？')) return;
     await importAll(parseBackup(JSON.stringify(sample)));
-    setUnitPrice(sample.settings.unitPriceYenPerKm);
+    setSettings(await getSettings());
     setMessage({ kind: 'info', text: 'サンプルデータを読み込みました（架空の名前と町丁目までの住所です）' });
   };
 
@@ -38,22 +39,60 @@ export default function SettingsPage() {
       <h1>設定</h1>
       {message && <div className={`msg ${message.kind}`}>{message.text}</div>}
 
-      <div className="card">
-        <h2>費用負担の単価</h2>
-        <div className="row">
-          <input
-            type="number"
-            min={0}
-            value={unitPrice ?? ''}
-            onChange={(e) => setUnitPrice(Number(e.target.value))}
-            onBlur={() => unitPrice !== null && saveSettings({ unitPriceYenPerKm: unitPrice })}
-          />
-          円/km
-        </div>
-        <p className="muted">
-          負担額 = 区間の往復距離(km) × 単価。初期値 17 円/km はガソリン 170 円/L・燃費 10 km/L の想定です。新しく作る計画から反映されます。
-        </p>
-      </div>
+      {settings && (
+        <>
+          <div className="card">
+            <h2>費用負担の単価</h2>
+            <NumberSetting
+              settings={settings}
+              onChange={setSettings}
+              field="unitPriceYenPerKm"
+              unit="円/km"
+              help="負担額 = 区間の往復距離(km) × 単価。初期値 17 円/km はガソリン 170 円/L・燃費 10 km/L の想定です。"
+            />
+          </div>
+
+          <div className="card">
+            <h2>出発時刻の計算</h2>
+            <NumberSetting
+              settings={settings}
+              onChange={setSettings}
+              field="durationFactor"
+              label="補正係数"
+              unit="倍"
+              step={0.1}
+              help="地図サービスの所要時間は信号待ちや渋滞を含まず短めに出るため、この倍率を掛けます。実際にかかった時間と比べて調整してください。"
+            />
+            <NumberSetting
+              settings={settings}
+              onChange={setSettings}
+              field="dwellMin"
+              label="乗車時間"
+              unit="分"
+              help="子を乗せる家 1 か所あたりに見込む時間です。"
+            />
+            <NumberSetting
+              settings={settings}
+              onChange={setSettings}
+              field="bufferMin"
+              label="余裕時間"
+              unit="分"
+              help="会場到着の目標 = 集合時間 − 余裕時間。配車計画の画面で試合ごとに変えることもできます。"
+            />
+            <button
+              className="small"
+              onClick={async () => {
+                const next = { ...settings, durationFactor: DEFAULT_SETTINGS.durationFactor, dwellMin: DEFAULT_SETTINGS.dwellMin, bufferMin: DEFAULT_SETTINGS.bufferMin };
+                setSettings(next);
+                await saveSettings(next);
+              }}
+            >
+              初期値（1.3 倍・5 分・15 分）に戻す
+            </button>
+            <p className="muted">設定は新しく作る計画から反映されます。</p>
+          </div>
+        </>
+      )}
 
       <div className="card">
         <h2>バックアップ</h2>
@@ -121,5 +160,43 @@ export default function SettingsPage() {
         </ul>
       </div>
     </>
+  );
+}
+
+function NumberSetting({
+  settings,
+  onChange,
+  field,
+  label,
+  unit,
+  step = 1,
+  help,
+}: {
+  settings: Settings;
+  onChange: (s: Settings) => void;
+  field: keyof Settings;
+  label?: string;
+  unit: string;
+  step?: number;
+  help: string;
+}) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div className="row">
+        {label && <span style={{ minWidth: '5em' }}>{label}</span>}
+        <input
+          type="number"
+          min={0}
+          step={step}
+          value={settings[field]}
+          onChange={(e) => onChange({ ...settings, [field]: Number(e.target.value) })}
+          onBlur={() => saveSettings(settings)}
+        />
+        {unit}
+      </div>
+      <p className="muted" style={{ margin: '2px 0 0' }}>
+        {help}
+      </p>
+    </div>
   );
 }

@@ -42,6 +42,14 @@ export type PlanInput = {
   /** 車を出せる householdId → 乗車可能人数（運転手と自分の子を除く） */
   drivers: Record<string, number>;
   unitPriceYenPerKm: number;
+  /** 集合時間（HH:MM） */
+  assemblyTime: string;
+  /** 余裕時間（分）。会場到着の目標 = 集合時間 − 余裕時間 */
+  bufferMin: number;
+  /** 子を乗せる家 1 か所あたりの乗車時間（分） */
+  dwellMin: number;
+  /** 走行時間の補正係数 */
+  durationFactor: number;
   createdAt: string;
 };
 
@@ -56,6 +64,17 @@ export type Car = {
   distanceM: number;
   /** 地図に描く経路 [lat, lng] */
   geometry: [number, number][];
+  schedule: CarSchedule;
+};
+
+/** 時刻はすべて「0 時からの分」 */
+export type CarSchedule = {
+  /** 運転手宅を出発する時刻 */
+  departMin: number;
+  /** 各立ち寄り先で子を乗せる時刻（stops と同じ順） */
+  stopMin: number[];
+  /** 会場に着く時刻（= 集合時間 − 余裕時間） */
+  arriveMin: number;
 };
 
 export type Rider = {
@@ -66,6 +85,8 @@ export type Rider = {
   sectionDistanceM: number;
   roundTripDistanceM: number;
   costYen: number;
+  /** 乗車する時刻（0 時からの分）。自分の家の車なら運転手宅の出発時刻 */
+  pickupMin: number;
 };
 
 /** 計算に使った入力一式（座標を含む）のコピー */
@@ -81,6 +102,8 @@ export type PlanResult = {
   inputId: string;
   inputSnapshot: PlanSnapshot;
   distanceMatrix: number[][];
+  /** 所要時間行列（秒・整数。補正係数を掛ける前の値） */
+  durationMatrix: number[][];
   cars: Car[];
   riders: Rider[];
   totalDistanceM: number;
@@ -93,12 +116,21 @@ export type PlanResult = {
 
 export type Settings = {
   unitPriceYenPerKm: number;
+  /** 以下は新しく作る計画の初期値（設計書 D13） */
+  durationFactor: number;
+  dwellMin: number;
+  bufferMin: number;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   // ガソリン 170 円/L、燃費 10 km/L を想定
   unitPriceYenPerKm: 17,
+  durationFactor: 1.3,
+  dwellMin: 5,
+  bufferMin: 15,
 };
+
+export type ScheduleParams = Pick<PlanInput, 'assemblyTime' | 'bufferMin' | 'dwellMin' | 'durationFactor'>;
 
 export type ErrorCode = 'E01' | 'E02' | 'E03' | 'E04' | 'E05' | 'E06';
 
