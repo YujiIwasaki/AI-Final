@@ -1,0 +1,238 @@
+{
+  "app": "carpool-optimizer",
+  "version": 1,
+  "exportedAt": "2026-11-05T00:00:00.000Z",
+  "households": [
+    {
+      "id": "sample-h01",
+      "label": "青木家",
+      "address": "東京都世田谷区駒沢2丁目",
+      "lat": 35.634777,
+      "lng": 139.658264,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h02",
+      "label": "石井家",
+      "address": "東京都世田谷区上馬3丁目",
+      "lat": 35.633541,
+      "lng": 139.663345,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h03",
+      "label": "上田家",
+      "address": "東京都世田谷区野沢2丁目",
+      "lat": 35.633926,
+      "lng": 139.668076,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h04",
+      "label": "遠藤家",
+      "address": "東京都世田谷区下馬4丁目",
+      "lat": 35.635803,
+      "lng": 139.678452,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h05",
+      "label": "大野家",
+      "address": "東京都世田谷区三軒茶屋1丁目",
+      "lat": 35.641197,
+      "lng": 139.671494,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h06",
+      "label": "加藤家",
+      "address": "東京都世田谷区弦巻3丁目",
+      "lat": 35.637009,
+      "lng": 139.64592,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h07",
+      "label": "木村家",
+      "address": "東京都世田谷区桜新町1丁目",
+      "lat": 35.628891,
+      "lng": 139.642975,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h08",
+      "label": "工藤家",
+      "address": "東京都世田谷区深沢4丁目",
+      "lat": 35.620304,
+      "lng": 139.656708,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h09",
+      "label": "小林家",
+      "address": "東京都世田谷区新町2丁目",
+      "lat": 35.629829,
+      "lng": 139.648727,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h10",
+      "label": "斎藤家",
+      "address": "東京都目黒区八雲3丁目",
+      "lat": 35.617153,
+      "lng": 139.666672,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h11",
+      "label": "清水家",
+      "address": "東京都目黒区東が丘1丁目",
+      "lat": 35.628658,
+      "lng": 139.669128,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    },
+    {
+      "id": "sample-h12",
+      "label": "鈴木家",
+      "address": "東京都世田谷区用賀2丁目",
+      "lat": 35.627117,
+      "lng": 139.638168,
+      "geocodedAt": "2026-11-05T00:00:00.000Z"
+    }
+  ],
+  "players": [
+    {
+      "id": "sample-p01",
+      "name": "青木 翔太",
+      "householdId": "sample-h01",
+      "active": true
+    },
+    {
+      "id": "sample-p02",
+      "name": "石井 蓮",
+      "householdId": "sample-h02",
+      "active": true
+    },
+    {
+      "id": "sample-p03",
+      "name": "石井 湊",
+      "householdId": "sample-h02",
+      "active": true
+    },
+    {
+      "id": "sample-p04",
+      "name": "上田 陽向",
+      "householdId": "sample-h03",
+      "active": true
+    },
+    {
+      "id": "sample-p05",
+      "name": "遠藤 悠真",
+      "householdId": "sample-h04",
+      "active": true
+    },
+    {
+      "id": "sample-p06",
+      "name": "大野 颯",
+      "householdId": "sample-h05",
+      "active": true
+    },
+    {
+      "id": "sample-p07",
+      "name": "加藤 大和",
+      "householdId": "sample-h06",
+      "active": true
+    },
+    {
+      "id": "sample-p08",
+      "name": "木村 陸",
+      "householdId": "sample-h07",
+      "active": true
+    },
+    {
+      "id": "sample-p09",
+      "name": "木村 樹",
+      "householdId": "sample-h07",
+      "active": true
+    },
+    {
+      "id": "sample-p10",
+      "name": "工藤 律",
+      "householdId": "sample-h08",
+      "active": true
+    },
+    {
+      "id": "sample-p11",
+      "name": "小林 奏太",
+      "householdId": "sample-h09",
+      "active": true
+    },
+    {
+      "id": "sample-p12",
+      "name": "斎藤 朝陽",
+      "householdId": "sample-h10",
+      "active": true
+    },
+    {
+      "id": "sample-p13",
+      "name": "清水 春輝",
+      "householdId": "sample-h11",
+      "active": true
+    },
+    {
+      "id": "sample-p14",
+      "name": "鈴木 健太",
+      "householdId": "sample-h12",
+      "active": true
+    }
+  ],
+  "venues": [
+    {
+      "id": "sample-v01",
+      "name": "駒沢オリンピック公園",
+      "address": "東京都世田谷区駒沢公園1-1",
+      "lat": 35.626083,
+      "lng": 139.657501,
+      "geocodedAt": "2026-11-05T00:00:00.000Z",
+      "defaultParking": 4
+    }
+  ],
+  "planInputs": [
+    {
+      "id": "sample-plan01",
+      "matchDate": "2026-11-08",
+      "venueId": "sample-v01",
+      "parking": 4,
+      "attendance": {
+        "sample-p01": true,
+        "sample-p02": true,
+        "sample-p03": true,
+        "sample-p04": true,
+        "sample-p05": true,
+        "sample-p06": true,
+        "sample-p07": true,
+        "sample-p08": true,
+        "sample-p09": true,
+        "sample-p10": true,
+        "sample-p11": true,
+        "sample-p12": true,
+        "sample-p13": true,
+        "sample-p14": true
+      },
+      "drivers": {
+        "sample-h02": 3,
+        "sample-h04": 3,
+        "sample-h06": 4,
+        "sample-h07": 2,
+        "sample-h09": 3,
+        "sample-h11": 4
+      },
+      "unitPriceYenPerKm": 17,
+      "createdAt": "2026-11-05T00:00:00.000Z"
+    }
+  ],
+  "planResults": [],
+  "settings": {
+    "unitPriceYenPerKm": 17
+  }
+}

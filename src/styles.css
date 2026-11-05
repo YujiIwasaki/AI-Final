@@ -1,0 +1,369 @@
+:root {
+  --green: #1e6b3a;
+  --green-light: #e8f3ec;
+  --border: #d6dbd8;
+  --text: #1d2420;
+  --muted: #5f6b64;
+  --danger: #b3261e;
+  --danger-light: #fdecea;
+  --warn: #8a5a00;
+  --warn-light: #fff4dc;
+  --tab-h: 60px;
+  font-family: system-ui, -apple-system, 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f7f6;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 12px calc(var(--tab-h) + 24px + env(safe-area-inset-bottom));
+}
+
+h1 {
+  font-size: 1.25rem;
+  margin: 4px 0 12px;
+}
+
+h2 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.grow {
+  flex: 1 1 160px;
+}
+
+label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+input[type='text'],
+input[type='date'],
+input[type='number'],
+select {
+  font: inherit;
+  font-size: 16px; /* iPhone で拡大されないように */
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  min-width: 0;
+  max-width: 100%;
+}
+
+select {
+  width: 100%;
+  text-overflow: ellipsis;
+}
+
+input[type='number'] {
+  width: 4.5em;
+}
+
+input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+}
+
+button {
+  font: inherit;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--green);
+  background: #fff;
+  color: var(--green);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--green);
+  color: #fff;
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.small {
+  padding: 3px 10px;
+  font-size: 0.85rem;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.big {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.05rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.msg {
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+
+.msg.error {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.msg.warn {
+  background: var(--warn-light);
+  color: var(--warn);
+}
+
+.msg.info {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--green-light);
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.badge.warn {
+  background: var(--warn-light);
+  color: var(--warn);
+}
+
+/* 配車計画：世帯ごとのブロック */
+.household {
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+.household:first-child {
+  border-top: none;
+}
+
+.household-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.household-name {
+  font-weight: 600;
+  min-width: 6em;
+}
+
+.kids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 4px 0 0 1em;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.check.disabled {
+  color: var(--muted);
+}
+
+.summary {
+  position: sticky;
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 結果 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  background: var(--green-light);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.stat .label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.stat .value {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.map {
+  height: 360px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.map.small {
+  height: 260px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+td.wrap {
+  white-space: normal;
+}
+
+.sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.pin.venue {
+  border-radius: 6px;
+  background: #222;
+}
+
+pre.share {
+  white-space: pre-wrap;
+  background: #f5f7f6;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+}
+
+/* 下部タブ */
+nav.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 1000;
+}
+
+nav.tabs button {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.78rem;
+}
+
+nav.tabs button .icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+nav.tabs button.active {
+  color: var(--green);
+  font-weight: 700;
+}
+
+@media (min-width: 720px) {
+  .map {
+    height: 480px;
+  }
+}
