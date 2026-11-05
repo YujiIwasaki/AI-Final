@@ -1,0 +1,15 @@
+# 依存・ビルド成果物
+node_modules/
+dist/
+coverage/
+
+# 個人情報（本物の名簿・住所・バックアップ）はコミットしない
+*.backup.json
+backup*.json
+real_data/
+*.local.csv
+
+# 環境
+.env*
+.DS_Store
+Thumbs.db
